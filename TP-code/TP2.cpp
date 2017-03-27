@@ -5,110 +5,89 @@
 #include <visp/vpImageIo.h>
 #include <visp/vpImageSimulator.h>
 #include <visp/vpDisplayX.h>
+#include <visp/vpImageConvert.h>
+#include <math.h>
 
 using namespace std ;
 
+void displayImage(vpImage<unsigned char> img, int posX, int posY, const char *title)
+{
+    vpDisplayX d(img, posX, posY, title);
+    vpDisplay::display(img);
+    vpDisplay::flush(img);
+    vpDisplay::getClick(img);
+    vpDisplay::close(img);
+}
+
+float convolution(const vpImage< unsigned char > &I, int i, int j, const vpMatrix &K)
+{
+    int rows = K.getRows();
+    int cols = K.getCols();
+    int heigth = I.getHeight();
+    int width = I.getCols();
+
+    double sum = 0;
+    int m = 0;
+    int n = 0;
+
+    for(int k = -rows/2; k<=rows/2; k++)
+    {
+        n=0;
+        for(int l = -cols/2; l<=cols/2; l++)
+        {
+            if(i+k<0 || i+k>=heigth)
+                sum+=0;
+
+            else if(j+l<0 || j+l>=width)
+                sum+=0;
+
+            else
+                sum += I[i+k][j+l]*K[m][n];
+            n++;
+        }
+        m++;
+    }
+
+    return sum;
+
+}
+
 int main()
 {
-  vpImage<vpRGBa> Icamera(300,400,0);
-  vpImage<vpRGBa> Iimage(876,1200);
+  vpImage<unsigned char> img_1;
+  vpImage<unsigned char> img_2;
 
-  vpImageIo::read(Iimage,"../data/big-sleep.jpg") ;
+  vpImageIo::read(img_1, "../data/tsukuba-l.jpg");
+  vpImageIo::read(img_2, "../data/tsukuba-r.jpg");
 
-  double L = 0.600;
-  double l = 0.438;
+  vpImage<float> disparity_map;
+  disparity_map.resize(img_1.getHeight(), img_1.getWidth());
 
-  // Initialise the 3D coordinates of the Iimage corners
-  vpColVector X[4];
-  for (int i = 0; i < 4; i++) X[i].resize(3);
-  // Top left corner
-  X[0][0] = -L;
-  X[0][1] = -l;
-  X[0][2] = 0;
+  for(int i = 0; i < img_1.getHeight(); i++) {
+    for(int j = 0; j < img_1.getWidth(); j++) {
+      float crit = abs(img_2[i][0] - img_1[i][j]);
+      float disparity = 0;
 
-  // Top right corner
-  X[1][0] = L;
-  X[1][1] = -l;
-  X[1][2] = 0;
+      for(int k = 1; k < img_2.getWidth(); k++) {
+        float new_crit = abs(img_2[i][k] - img_1[i][j]);
 
-  // Bottom right corner
-  X[2][0] = L;
-  X[2][1] = l;
-  X[2][2] = 0;
+        if(new_crit < crit) {
+          crit = new_crit;
+          disparity = k;
 
-  //Bottom left corner
-  X[3][0] = -L;
-  X[3][1] = l;
-  X[3][2] = 0;
+        }
 
-  vpImageSimulator sim;
-  sim.init(Iimage, X);
-  vpCameraParameters cam(800.0, 800.0, 200, 150);
+      }
 
-  cam.printParameters() ;
+      disparity_map[i][j] = disparity;
 
-  vpHomogeneousMatrix c1gMo(0,0,2, vpMath::rad(0), vpMath::rad(0), 0) ;
+    }
+  }
 
-  sim.setCameraPosition(c1gMo);
-
-  sim.getImage(Icamera, cam);
-
-  vpDisplayX d1(Icamera) ;
-  vpDisplay::display(Icamera) ;
-  vpDisplay::flush(Icamera) ;
-  vpDisplay::getClick(Icamera) ;
-
-  cout << "Image I1g " <<endl ;
-  cout << c1gMo << endl ;
-  vpImageIo::write(Icamera,"I1g.jpg") ;
-  vpImageIo::write(Icamera,"I1g.pgm") ;
-
-  vpHomogeneousMatrix c1dMo(0.1,0,2, vpMath::rad(0),vpMath::rad(0),0) ;
-
-  Icamera = 0 ;
-  sim.setCameraPosition(c1dMo);
-  sim.getImage(Icamera,cam);
-  vpDisplay::display(Icamera) ;
-  vpDisplay::flush(Icamera) ;
-  vpDisplay::getClick(Icamera) ;
-
-  cout << "Image I1d " <<endl ;
-  cout << c1dMo << endl ;
-  vpImageIo::write(Icamera,"I1d.jpg") ;
-  vpImageIo::write(Icamera,"I1d.pgm") ;
-
-  //----------------------------------------------------------------------------
-
-  Icamera = 0 ;
-  cam.initPersProjWithoutDistortion(800.0, 600.0, 200, 150);
-  cam.printParameters() ;
-
-  vpHomogeneousMatrix c2gMo(0,0,1.5,  vpMath::rad(0),vpMath::rad(0),0) ;
-  sim.setCameraPosition(c2gMo);
-
-  sim.getImage(Icamera,cam);
-
-  vpDisplay::display(Icamera) ;
-  vpDisplay::flush(Icamera) ;
-  vpDisplay::getClick(Icamera) ;
-  cout << "Image I2g " <<endl ;
-  cout << c2gMo << endl ;
-  vpImageIo::write(Icamera,"I2g.jpg") ;
-  vpImageIo::write(Icamera,"I2g.pgm") ;
-
-//--------------------
-  Icamera = 0 ;
-  vpHomogeneousMatrix c2dMo(0.1,0.1,1.5, vpMath::rad(10), vpMath::rad(10), vpMath::rad(10)) ;
-  sim.setCameraPosition(c2dMo);
-
-  sim.getImage(Icamera,cam);
-  vpDisplay::display(Icamera) ;
-  vpDisplay::flush(Icamera) ;
-  vpDisplay::getClick(Icamera) ;
-  cout << "Image I2g " <<endl ;
-  cout << c2dMo << endl ;
-  vpImageIo::write(Icamera,"I2d.jpg") ;
-  vpImageIo::write(Icamera,"I2d.pgm") ;
+  vpImage<unsigned char> disparity_map_uchar;
+  vpImageConvert::convert(disparity_map, disparity_map_uchar);
+  displayImage(disparity_map_uchar, 0, 0, "Disparity Map");
+  vpImageIo::write(disparity_map_uchar, "disparity_map.png") ;
 
   return 0;
 }
