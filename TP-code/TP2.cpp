@@ -45,14 +45,11 @@ float SSD(const vpImage< unsigned char > &I,const vpImage< unsigned char > &I2, 
             else
                 sum += K[m*size+n] * pow((I2[i+k][e+l] - I[i+k][j+l]),2);
             n++;
-        }
-        m++;
-    }
-
-//    std::cout << sum << std::endl;
 
     return sum;
 
+      }
+    }
 }
 
 void computeDisparityWTA(vpImage<unsigned char> & img_1, vpImage<unsigned char> & img_2,vpImage<unsigned char> & disparity_map)
