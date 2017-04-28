@@ -30,3 +30,6 @@
 
 # Build folder
 TP-build/*
+TP_Build/*
+ViSP-2.10.0/*
+Visp_build/*
