@@ -20,39 +20,66 @@ void displayImage(vpImage<unsigned char> img, int posX, int posY, const char *ti
     vpDisplay::close(img);
 }
 
-float SSD(const vpImage< unsigned char > &I,const vpImage< unsigned char > &I2, int i, int j, int e, double* &K, const int size)
+float SSD(const vpImage<unsigned char> & img_1, const vpImage<unsigned char> & img_2, int i, int j, int u, vpMatrix kernel)
 {
-    int rows = size;
-    int cols = size;
-    int heigth = I.getHeight();
-    int width = I.getCols();
+    int rows = kernel.getRows();
+    int cols = kernel.getCols();
+    int heigth = img_1.getHeight();
+    int width = img_1.getCols();
 
     double sum = 0;
     int m = 0;
     int n = 0;
 
-    for(int k = -rows/2; k<=rows/2; k++)
+    for(int k = -rows / 2; k <= rows / 2; k++)
     {
-        n=0;
-        for(int l = -cols/2; l<=cols/2; l++)
+        n = 0;
+        for(int l = -cols / 2; l <= cols / 2; l++)
         {
-            if(i+k<0 || i+k>=heigth)
-                sum+=0;
+            if(i + k < 0 || i + k >= heigth)
+                sum += 0;
 
-            else if(j+l<0 || j+l>=width)
-                sum+=0;
+            else if(j + l < 0 || j + l >= width)
+                sum += 0;
 
             else
-                sum += K[m*size+n] * pow((I2[i+k][e+l] - I[i+k][j+l]),2);
+                sum += kernel[m][n] * pow((img_2[i + k][u + l] - img_1[i + k][j + l]), 2);
             n++;
 
-    return sum;
+            return sum;
 
       }
     }
 }
 
-void computeDisparityWTA(vpImage<unsigned char> & img_1, vpImage<unsigned char> & img_2,vpImage<unsigned char> & disparity_map)
+void computeDisparityAC(vpImage<unsigned char> & img_1, vpImage<unsigned char> & img_2, vpMatrix & kernel, vpImage<float> & disparity_map)
+{
+
+  for(int i = 0; i < img_1.getHeight(); i++) {
+    for(int j = 0; j < img_1.getWidth(); j++) {
+
+      float crit =  SSD(img_1, img_2, i, j, 0, kernel);
+      float disparity = 0;
+
+      for(int k = 1; k < img_2.getWidth(); k++) {
+
+        float new_crit = SSD(img_1, img_2, i, j, k, kernel);
+
+        if(new_crit < crit) {
+          crit = new_crit;
+          disparity = k;
+        //   disparity = abs(j - k);
+
+        }
+      }
+
+      disparity_map[i][j] = disparity;
+
+    }
+  }
+}
+
+void computeDisparityWTA(vpImage<unsigned char> & img_1, vpImage<unsigned char> & img_2, vpImage<float> & disparity_map)
 {
 
   for(int i = 0; i < img_1.getHeight(); i++) {
@@ -78,29 +105,27 @@ void computeDisparityWTA(vpImage<unsigned char> & img_1, vpImage<unsigned char> 
   }
 }
 
-void computeDisparityAC(vpImage<unsigned char> & img_1, vpImage<unsigned char> & img_2, double* K, int size, vpImage<float> & disparity_map)
-{
+vpMatrix generateGaussianKernel(int size, float sigma) {
+    int gaussSize = (size + 1) / 2;
+    double gauss[gaussSize];
+    vpImageFilter::getGaussianKernel(gauss, size, sigma);
 
-  for(int i = 0; i < img_1.getHeight(); i++) {
-    for(int j = 0; j < img_1.getWidth(); j++) {
-
-      float crit =  SSD(img_1,img_2,i,j,0,K, size);;
-      float disparity = 0;
-
-      for(int k = 1; k < img_2.getWidth(); k++) {
-
-        float new_crit = SSD(img_1,img_2,i,j,k,K, size);
-
-        if(new_crit < crit) {
-          crit = new_crit;
-          disparity = k;
+    vpMatrix kernel1D(1, size);
+    for(int i = 0; i < size; i++) {
+        if(i < gaussSize - 1) {
+            kernel1D[0][i] = gauss[(gaussSize - 1) - i];
         }
-      }
-
-      disparity_map[i][j] = disparity;
+        if(i == gaussSize - 1) {
+            kernel1D[0][i] = gauss[0];
+        }
+        if(i > gaussSize - 1) {
+            kernel1D[0][i] = gauss[i - (gaussSize - 1)];
+        }
 
     }
-  }
+
+    return kernel1D.transpose() * kernel1D;
+
 }
 
 int main()
@@ -114,18 +139,15 @@ int main()
   vpImage<float> disparity_map;
   disparity_map.resize(img_1.getHeight(), img_1.getWidth());
 
-  //computeDisparityWTA(img_1,img_2,disparity_map);
-  int size = 3;
-  double kernel[size];
-  vpImageFilter::getGaussianKernel(kernel, size);
+  // computeDisparityWTA(img_1, img_2, disparity_map);
 
-
-  computeDisparityAC(img_1,img_2, kernel, size,disparity_map);
+  vpMatrix kernel = generateGaussianKernel(3, 1);
+  computeDisparityAC(img_1,img_2, kernel, disparity_map);
 
   vpImage<unsigned char> disparity_map_uchar;
   vpImageConvert::convert(disparity_map, disparity_map_uchar);
   displayImage(disparity_map_uchar, 0, 0, "Disparity Map");
-  vpImageIo::write(disparity_map_uchar, "disparity_map.png") ;
+  vpImageIo::write(disparity_map_uchar, "disparity_map.png");
 
   return 0;
 }
