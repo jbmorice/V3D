@@ -20,36 +20,28 @@ void displayImage(vpImage<unsigned char> img, int posX, int posY, const char *ti
     vpDisplay::close(img);
 }
 
-float SSD(const vpImage<unsigned char> & img_1, const vpImage<unsigned char> & img_2, int i, int j, int u, vpMatrix kernel)
+float SSD(const vpImage<unsigned char> & img_1, const vpImage<unsigned char> & img_2, int i, int j, int k, vpMatrix kernel)
 {
     int rows = kernel.getRows();
     int cols = kernel.getCols();
-    int heigth = img_1.getHeight();
-    int width = img_1.getCols();
-
     double sum = 0;
-    int m = 0;
-    int n = 0;
-
-    for(int k = -rows / 2; k <= rows / 2; k++)
-    {
-        n = 0;
-        for(int l = -cols / 2; l <= cols / 2; l++)
-        {
-            if(i + k < 0 || i + k >= heigth)
+    for(int m = -rows / 2; m <= rows / 2; m++){
+        for(int n = -cols / 2; n <= cols / 2; n++){
+            // Zero padding if window goes beyond image borders
+            if(i + m < 0 || i + m >= img_1.getHeight()) {
                 sum += 0;
-
-            else if(j + l < 0 || j + l >= width)
+            }
+            else if(j + n < 0 || j + n >= img_1.getWidth()) {
                 sum += 0;
-
-            else
-                sum += kernel[m][n] * pow((img_2[i + k][u + l] - img_1[i + k][j + l]), 2);
-            n++;
-
-            return sum;
-
-      }
+            }
+            else {
+                // k ? i + n ? i + n + k ?
+                sum += kernel[m + rows / 2][n + rows / 2] * pow(img_2[i + m][k] - img_1[i + m][j + n], 2);
+            }
+        }
     }
+
+    return sum;
 }
 
 void computeDisparityAC(vpImage<unsigned char> & img_1, vpImage<unsigned char> & img_2, vpMatrix & kernel, vpImage<float> & disparity_map)
@@ -67,8 +59,7 @@ void computeDisparityAC(vpImage<unsigned char> & img_1, vpImage<unsigned char> &
 
         if(new_crit < crit) {
           crit = new_crit;
-          disparity = k;
-        //   disparity = abs(j - k);
+          disparity = abs(j - k);
 
         }
       }
@@ -133,15 +124,15 @@ int main()
   vpImage<unsigned char> img_1;
   vpImage<unsigned char> img_2;
 
-  vpImageIo::read(img_1, "../data/tsukuba-l.jpg");
-  vpImageIo::read(img_2, "../data/tsukuba-r.jpg");
+  vpImageIo::read(img_1, "../data/scene_l.pgm");
+  vpImageIo::read(img_2, "../data/scene_r.pgm");
 
   vpImage<float> disparity_map;
   disparity_map.resize(img_1.getHeight(), img_1.getWidth());
 
   // computeDisparityWTA(img_1, img_2, disparity_map);
 
-  vpMatrix kernel = generateGaussianKernel(3, 1);
+  vpMatrix kernel = generateGaussianKernel(5, 1);
   computeDisparityAC(img_1,img_2, kernel, disparity_map);
 
   vpImage<unsigned char> disparity_map_uchar;
