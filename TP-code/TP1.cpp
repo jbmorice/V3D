@@ -67,8 +67,8 @@ int main()
   cout << gMo << endl ;
 
   // I1d
-  vpHomogeneousMatrix dMo(0.1,0,1.9, 
-			  vpMath::rad(5),vpMath::rad(5),vpMath::rad(5)) ; 
+  vpHomogeneousMatrix dMo(0.1,0,2, 
+			  vpMath::rad(0),vpMath::rad(0),vpMath::rad(0)) ; 
 
   sim.setCameraPosition(dMo);
   sim.getImage(Id,cam);  
@@ -85,6 +85,19 @@ int main()
   vpDisplay::display(Id) ;
   vpDisplay::flush(Id) ;
 
+  vpHomogeneousMatrix gMd = gMo * dMo.inverse(); // Matrice de passage entre les deux cameras
+
+  vpTranslationVector gtd;
+  gMd.extract(gtd);
+  vpRotationMatrix gRd;
+  gMd.extract(gRd);
+
+  vpMatrix gFd = cam.get_K_inverse().transpose() * gtd.skew() * gRd * cam.get_K_inverse();
+
+  int a = gFd[0][0];
+  int b = gFd[1][0];
+  int c = gFd[2][0];
+
   vpImagePoint pd ; 
 
   for (int i=0 ; i < 5 ; i++)
@@ -99,6 +112,14 @@ int main()
       // Calcul du lieu geometrique
       //....
 
+      vpMatrix p(3, 1);
+      p[0][0] = pd.get_u();
+      p[1][0] = pd.get_v();
+      p[2][0] = 1;
+
+      vpMatrix Deg = gFd * p;
+
+      // #TODO faire le tour de l'image et trouver les deux points d'entree et de sortie
 
       // Affichage dans Ig
       
