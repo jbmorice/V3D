@@ -5,6 +5,7 @@
 #include <visp/vpImageIo.h>
 #include <visp/vpImageSimulator.h>
 #include <visp/vpDisplayX.h>
+#include <visp/vpColor.h>
 
 
 using namespace std ;
@@ -67,8 +68,7 @@ int main()
   cout << gMo << endl ;
 
   // I1d
-  vpHomogeneousMatrix dMo(0.1,0,2, 
-			  vpMath::rad(0),vpMath::rad(0),vpMath::rad(0)) ; 
+  vpHomogeneousMatrix dMo(0.1,0,2, vpMath::rad(0),vpMath::rad(0),vpMath::rad(0)) ; 
 
   sim.setCameraPosition(dMo);
   sim.getImage(Id,cam);  
@@ -94,9 +94,11 @@ int main()
 
   vpMatrix gFd = cam.get_K_inverse().transpose() * gtd.skew() * gRd * cam.get_K_inverse();
 
-  int a = gFd[0][0];
-  int b = gFd[1][0];
-  int c = gFd[2][0];
+  std::cout << "matrice\n" << gFd << std::endl;
+
+  double a = gFd[0][0];
+  double b = gFd[0][1];
+  double c = gFd[0][2];
 
   vpImagePoint pd ; 
 
@@ -119,11 +121,36 @@ int main()
 
       vpMatrix Deg = gFd * p;
 
-      // #TODO faire le tour de l'image et trouver les deux points d'entree et de sortie
+      std::cout << Deg << std::endl;
+
+
+      // Initization of points
+      int py1 = 0;
+      int py2 = Id.getCols();
+      int px1 = 0;
+      int px2 = 0; 
+
+      for(int j1 = -1000; j1 < 1000; j1++)
+      {
+        if(Deg[0][0]*py1 + Deg[1][0] * j1 +Deg[0][2] == 0)
+        {
+          std::cout << "j1 find" << j1 << std::endl;
+          px1 = j1;
+        }
+      }
+
+      for(int j2 = -1000; j2 < 1000; j2++)
+      {
+        if(Deg[0][0]*py2 + Deg[1][0] * j2 +Deg[0][2] == 0)
+        {
+          std::cout << "j2 find" << j2 << std::endl;
+          px2 = j2;
+        }
+      }
 
       // Affichage dans Ig
       
-      //      vpDisplay::displayXXXX(Ig,...) ;
+      vpDisplay::displayLine(Ig,px1,py1,px2,py2, vpColor::red) ;
 
       vpDisplay::flush(Id) ;
       vpDisplay::flush(Ig) ;
