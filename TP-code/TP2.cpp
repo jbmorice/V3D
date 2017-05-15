@@ -36,7 +36,7 @@ float SSD(const vpImage<unsigned char> & img_1, const vpImage<unsigned char> & i
             }
             else {
                 // k ? i + n ? i + n + k ?
-                sum += kernel[m + rows / 2][n + rows / 2] * pow(img_2[i + m][k] - img_1[i + m][j + n], 2);
+                sum += kernel[m + rows / 2][n + rows / 2] * pow(img_2[i + m][n + k] - img_1[i + m][j + n], 2);
             }
         }
     }
@@ -132,7 +132,7 @@ int main()
 
   // computeDisparityWTA(img_1, img_2, disparity_map);
 
-  vpMatrix kernel = generateGaussianKernel(5, 1);
+  vpMatrix kernel = generateGaussianKernel(11, 1);
   computeDisparityAC(img_1,img_2, kernel, disparity_map);
 
   vpImage<unsigned char> disparity_map_uchar;
