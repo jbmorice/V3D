@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2015/dev/Debian) (preloaded format=pdflatex 2015.7.4)  19 MAY 2017 18:01
+This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2015/dev/Debian) (preloaded format=pdflatex 2015.7.4)  19 MAY 2017 17:57
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**TP2.tex
-(./TP2.tex
+**TP1.tex
+(./TP1.tex
 LaTeX2e <2014/05/01>
 Babel <3.9l> and hyphenation patterns for 79 languages loaded.
 (/usr/share/texlive/texmf-dist/tex/latex/base/report.cls
@@ -543,9 +543,8 @@ Package: float 2001/11/08 v1.3d Float enhancements (AL)
 \float@box=\box34
 \@float@everytoks=\toks34
 \@floatcapt=\box35
-)
-No file TP2.aux.
-\openout1 = `TP2.aux'.
+) (./TP1.aux)
+\openout1 = `TP1.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 54.
 LaTeX Font Info:    ... okay on input line 54.
@@ -560,6 +559,7 @@ LaTeX Font Info:    ... okay on input line 54.
 LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 54.
 LaTeX Font Info:    ... okay on input line 54.
 LaTeX Font Info:    Try loading font information for T1+qtm on input line 54.
+
 (/usr/share/texmf/tex/latex/tex-gyre/t1qtm.fd
 File: t1qtm.fd 2009/09/25 v1.2 font definition file for T1/qtm
 )
@@ -657,14 +657,14 @@ LaTeX Font Info:    Try loading font information for U+rsfs on input line 57.
 File: ursfs.fd 1998/03/24 rsfs font definition file (jk)
 ) [1
 
-{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
-No file TP2.toc.
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] (./TP1.toc)
 \tf@toc=\write4
-\openout4 = `TP2.toc'.
+\openout4 = `TP1.toc'.
 
-[1
+ [1
 
-] [2] <Image/Id.jpg, id=15, 401.5pt x 301.125pt>
+] [2]
+<Image/Id.jpg, id=15, 401.5pt x 301.125pt>
 File: Image/Id.jpg Graphic file (type jpg)
  <use Image/Id.jpg>
 Package pdftex.def Info: Image/Id.jpg used on input line 110.
@@ -740,17 +740,16 @@ File: Image/I4g.jpg Graphic file (type jpg)
 Package pdftex.def Info: Image/I4g.jpg used on input line 204.
 (pdftex.def)             Requested size: 200.7495pt x 150.56212pt.
  [6 <./Image/I3d.jpg> <./Image/I3g.jpg>] Excluding 'comment' comment. [7 <./Ima
-ge/I4d.jpg> <./Image/I4g.jpg>]
-No file TP2.lof.
+ge/I4d.jpg> <./Image/I4g.jpg>] (./TP1.lof)
 \tf@lof=\write5
-\openout5 = `TP2.lof'.
+\openout5 = `TP1.lof'.
 
-[8
+ [8
 
-] (./TP2.aux) ) 
+] (./TP1.aux) ) 
 Here is how much of TeX's memory you used:
- 6029 strings out of 493105
- 81465 string characters out of 6137073
+ 6035 strings out of 493105
+ 81513 string characters out of 6137073
  165558 words of memory out of 5000000
  9336 multiletter control sequences out of 15000+600000
  50595 words of font info for 65 fonts, out of 8000000 for 9000
@@ -767,7 +766,7 @@ b></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share
 /texmf/fonts/type1/public/tex-gyre/qtmb.pfb></usr/share/texmf/fonts/type1/publi
 c/tex-gyre/qtmr.pfb>
-Output written on TP2.pdf (9 pages, 380965 bytes).
+Output written on TP1.pdf (9 pages, 381387 bytes).
 PDF statistics:
  88 PDF objects out of 1000 (max. 8388607)
  56 compressed objects within 1 object stream
