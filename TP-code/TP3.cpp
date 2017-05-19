@@ -16,17 +16,63 @@ void DLT(unsigned int n,
 	 vpImagePoint *p2,
 	 vpMatrix &H12)
 {
-  
+
   // NBPTMIN points son necessaire ; remplace le 1e6 par ce nombre
-#define NBPTMIN 1e6 
-  if(n<    NBPTMIN )
+#define NBPTMIN 5
+  if(n < NBPTMIN)
   {
-    cout << "there must be at least " << NBPTMIN <<  " points in the both images\n" <<endl  ;
-    throw ;
+    cout << "there must be at least " << NBPTMIN <<  " points in the both images\n" <<endl;
+    throw;
   }
 
-  // ...
+  vpMatrix A(n * 2, 9);
 
+  for(int i = 0; i < n; i++){
+	  A[2 * i][0] = 0;
+	  A[2 * i][1] = 0;
+	  A[2 * i][2] = 0;
+	  A[2 * i][3] = -1 * p2[i].get_u();
+  	  A[2 * i][4] = -1 * p2[i].get_v();
+	  A[2 * i][5] = -1 * 1;
+	  A[2 * i][6] = p1[i].get_v() * p2[i].get_u();
+  	  A[2 * i][7] = p1[i].get_v() * p2[i].get_v();
+	  A[2 * i][8] = p1[i].get_v() * 1;
+
+	  A[2 * i + 1][0] = 1 * p2[i].get_u();
+  	  A[2 * i + 1][1] = 1 * p2[i].get_v();
+	  A[2 * i + 1][2] = 1 * 1;
+	  A[2 * i + 1][3] = 0;
+	  A[2 * i + 1][4] = 0;
+	  A[2 * i + 1][5] = 0;
+	  A[2 * i + 1][6] = -1 * p1[i].get_u() * p2[i].get_u();
+  	  A[2 * i + 1][7] = -1 * p1[i].get_u() * p2[i].get_v();
+	  A[2 * i + 1][8] = -1 * p1[i].get_u() * 1;
+  }
+
+  vpMatrix V(9, 1);
+  vpColVector D;
+  A.svd(D, V);
+  std::cout << "taille D : " << D.getRows() << "x" << D.getCols() << std::endl;
+
+  int minColIndex = 0;
+  for(int i = 1; i < D.getRows(); i++) {
+   if(D[i] < D[minColIndex]) {
+    minColIndex = i;
+   }
+  }
+
+std::cout << "min col index = " << minColIndex << std::endl;
+
+  H12.resize(3, 3);
+  int k = 0;
+  for(int i = 0; i < 3; i++) {
+  	for(int j = 0; j < 3; j++) {
+  		H12[i][j] = V[k][minColIndex];
+  		k++;
+  	}
+}
+
+  std::cout << "H12 calculee" << '\n';
 }
 
 
@@ -35,8 +81,8 @@ int main()
   vpImage<unsigned char> I1;
   vpImage<unsigned char> I2;
   vpImage<vpRGBa> Iimage(876,1200);
-  
- 
+
+
   vpImageIo::read(I1,"../data/I1.pgm") ;
   vpImageIo::read(I2,"../data/I2.pgm") ;
 
@@ -55,7 +101,7 @@ int main()
 
   int nb = 5;
   vpImagePoint p1[nb], p2[nb];
-  
+
   // clicker 5 point sur l'image I2 ; recuperer leur coordonnees
   for(unsigned int i=0; i<nb; i++)
     {
@@ -69,7 +115,7 @@ int main()
       vpDisplay::displayCharString(I1,p1[i],s,vpColor::red) ;
       vpDisplay::flush(I1) ;
     }
-  
+
   // clicker 5 point sur l'image I1 ; recuperer leur coordonnees
   // faites attention a les clicker dans le meme ordre
   for(unsigned int i=0; i<nb; i++)
@@ -84,32 +130,40 @@ int main()
       vpDisplay::displayCharString(I2,p2[i],s,vpColor::red) ;
       vpDisplay::flush(I2) ;
     }
-  
+
 
   // Calculer l'homographie
   vpMatrix H12 ;
-  DLT(nb,p1, p2, H12) ;
+  DLT(nb, p1, p2, H12) ;
 
-  cout << "Homographie H12 : " <<endl ; 
+  cout << "Homographie H12 : " << endl ;
   cout << H12 << endl ;
 
-  //Verification 
-  double residue =0 ;
-  for (int i=0 ; i < nb ; i++) 
+  //Verification
+  double residue = 0 ;
+  for (int i = 0 ; i < nb ; i++)
     {
       // Connaissant le formule permettant le transfert des points p2 dans p1
-      // Calculer les coordonnées des point p1 connaissant p2 et dHg
-      vpImagePoint p1_calcule  ;
-      //    p1_calcule  = ... ;
+      // Calculer les coordonnï¿½es des point p1 connaissant p2 et dHg
+	  vpMatrix p1_mat(3, 1);
+	  vpMatrix p2_mat(3, 1);
+	  p2_mat[0][0] = p2[i].get_u();
+  	  p2_mat[1][0] = p2[i].get_v();
+	  p2_mat[2][0] = 1;
+	  p1_mat = H12 * p2_mat;
 
-      // en deduire l'erreur sur commise sur chaque point et 
+	  vpImagePoint p1_calcule;
+	  p1_calcule.set_u(p1_mat[0][0] / p1_mat[2][0]);
+  	  p1_calcule.set_v(p1_mat[1][0] / p1_mat[2][0]);
+
+      // en deduire l'erreur sur commise sur chaque point et
       // afficher un cercle de rayon 10 fois cette erreur
-      double r ;
-      //      r = ... ;
-      cout << "point " <<i << "  " << r <<endl ;;
+      double r = vpImagePoint::distance(p1_calcule, p1[i]);
+
+      std::cout << "point " << i << "  " << r << std::endl;
       double rayon ;
-      rayon = sqrt(r)*10 ; if (rayon < 10) rayon =10 ;
-      vpDisplay::displayCircle(I1,p1_calcule,rayon,vpColor::green) ; ;
+      rayon = sqrt(r)*10 ; if (rayon < 10) rayon = 10;
+      vpDisplay::displayCircle(I1, p1_calcule, rayon, vpColor::green);
     }
 
 
@@ -124,7 +178,7 @@ int main()
   vpDisplay::close(I1) ;
 
 
-  
+
 
   return 0;
 }
