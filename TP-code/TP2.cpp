@@ -142,7 +142,6 @@ int main()
   vpImage<float> disparity_map;
   disparity_map.resize(img_1.getHeight(), img_1.getWidth());
 
-<<<<<<< HEAD
   std::cout << "WTA" << std::endl;
 
   computeDisparityWTA(img_1, img_2, disparity_map);
@@ -177,17 +176,6 @@ int main()
 
       }
   }
-=======
-  computeDisparityWTA(img_1, img_2, disparity_map);
-
-  //vpMatrix kernel = generateGaussianKernel(11, 1);
-  //computeDisparityAC(img_1,img_2, kernel, disparity_map);
-
-  vpImage<unsigned char> disparity_map_uchar;
-  vpImageConvert::convert(disparity_map, disparity_map_uchar);
-  displayImage(disparity_map_uchar, 0, 0, "Disparity Map");
-  vpImageIo::write(disparity_map_uchar, "disparity_mapWTA.jpg");
->>>>>>> b28a8f1c39b42b2ef59726cb807e08521294e05f
 
   return 0;
 }
