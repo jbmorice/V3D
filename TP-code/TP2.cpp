@@ -119,6 +119,18 @@ vpMatrix generateGaussianKernel(int size, float sigma) {
 
 }
 
+vpMatrix generateNormalKernel(int size) {
+    vpMatrix kernel(size, size);
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            kernel[i][j] = 1;
+        }
+    }
+
+    return kernel;
+
+}
+
 int main()
 {
   vpImage<unsigned char> img_1;
@@ -130,15 +142,40 @@ int main()
   vpImage<float> disparity_map;
   disparity_map.resize(img_1.getHeight(), img_1.getWidth());
 
-  // computeDisparityWTA(img_1, img_2, disparity_map);
+  std::cout << "WTA" << std::endl;
 
-  vpMatrix kernel = generateGaussianKernel(11, 1);
-  computeDisparityAC(img_1,img_2, kernel, disparity_map);
+  computeDisparityWTA(img_1, img_2, disparity_map);
 
   vpImage<unsigned char> disparity_map_uchar;
   vpImageConvert::convert(disparity_map, disparity_map_uchar);
-  displayImage(disparity_map_uchar, 0, 0, "Disparity Map");
-  vpImageIo::write(disparity_map_uchar, "disparity_map.png");
+  //displayImage(disparity_map_uchar, 0, 0, "Disparity Map");
+  vpImageIo::write(disparity_map_uchar, "disparity_map_wta.png");
+
+  for(int i = 0; i <= 9; i++) {
+      if(i % 2 == 1) {
+          std::cout << "Normal kernel " << std::to_string(i) << std::endl;
+
+          vpMatrix kernel = generateNormalKernel(i);
+          computeDisparityAC(img_1, img_2, kernel, disparity_map);
+
+          vpImageConvert::convert(disparity_map, disparity_map_uchar);
+          //displayImage(disparity_map_uchar, 0, 0, "Disparity Map");
+          vpImageIo::write(disparity_map_uchar, "disparity_map_normal_kernel_" + std::to_string(i) + ".png");
+
+          for(int j = 1; j <= 10; j += 3) {
+              std::cout << "Gaussian kernel " << std::to_string(i) << " " << std::to_string(j) << std::endl;
+
+              vpMatrix kernel = generateGaussianKernel(i, j);
+              computeDisparityAC(img_1, img_2, kernel, disparity_map);
+
+              vpImageConvert::convert(disparity_map, disparity_map_uchar);
+              //displayImage(disparity_map_uchar, 0, 0, "Disparity Map");
+              vpImageIo::write(disparity_map_uchar, "disparity_map_gaussian_kernel_" + std::to_string(i) + "_" + std::to_string(j) + ".png");
+
+          }
+
+      }
+  }
 
   return 0;
 }
