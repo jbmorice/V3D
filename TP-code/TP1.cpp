@@ -60,7 +60,7 @@ int main()
 
 
   // I1g
-  vpHomogeneousMatrix  gMo(0,0,2,  vpMath::rad(0),vpMath::rad(0),0) ;
+  vpHomogeneousMatrix  gMo(0.,0,2,  vpMath::rad(0),vpMath::rad(0),0) ;
   sim.setCameraPosition(gMo);
   sim.getImage(Ig,cam);
   cout << "Image I1g " <<endl ;
@@ -68,8 +68,8 @@ int main()
   cout << gMo << endl ;
 
   // I1d
-  vpHomogeneousMatrix dMo(0.1,0,2, vpMath::rad(0),vpMath::rad(0),vpMath::rad(0)) ; 
-
+  //vpHomogeneousMatrix dMo(0.,0,2, vpMath::rad(0),vpMath::rad(0),vpMath::rad(0)) ; 
+  vpHomogeneousMatrix dMo(0.1,0,1.9, vpMath::rad(5),vpMath::rad(5),vpMath::rad(5)) ; 
   sim.setCameraPosition(dMo);
   sim.getImage(Id,cam);  
   cout << "Image I1d " <<endl ;
@@ -96,13 +96,16 @@ int main()
 
   std::cout << "matrice\n" << gFd << std::endl;
 
-  double a = gFd[0][0];
-  double b = gFd[0][1];
-  double c = gFd[0][2];
+  vpImage<vpRGBa> Ic1 ;
+  vpImage<vpRGBa> Ic2 ;
+  vpDisplay::getImage(Id,Ic1) ;
+  vpImageIo::write(Ic1,"Id.jpg") ;
+  vpDisplay::getImage(Ig,Ic2) ;
+  vpImageIo::write(Ic2,"Ig.jpg") ;
 
   vpImagePoint pd ; 
 
-  for (int i=0 ; i < 5 ; i++)
+  for (int i=0 ; i < 10 ; i++)
     {
       cout << "Click point number " << i << endl ;
       vpDisplay::getClick(Id, pd) ;
@@ -125,28 +128,14 @@ int main()
 
 
       // Initization of points
+      double a = Deg[0][0]; 
+      double b = Deg[1][0];
+      double c = Deg[2][0];
       int py1 = 0;
       int py2 = Id.getCols();
-      int px1 = 0;
-      int px2 = 0; 
+      int px1 = ((-a*py1-c)/b);
+      int px2 = ((-a*py2-c)/b);
 
-      for(int j1 = -1000; j1 < 1000; j1++)
-      {
-        if(Deg[0][0]*py1 + Deg[1][0] * j1 +Deg[0][2] == 0)
-        {
-          std::cout << "j1 find" << j1 << std::endl;
-          px1 = j1;
-        }
-      }
-
-      for(int j2 = -1000; j2 < 1000; j2++)
-      {
-        if(Deg[0][0]*py2 + Deg[1][0] * j2 +Deg[0][2] == 0)
-        {
-          std::cout << "j2 find" << j2 << std::endl;
-          px2 = j2;
-        }
-      }
 
       // Affichage dans Ig
       
@@ -156,13 +145,40 @@ int main()
       vpDisplay::flush(Ig) ;
     }
 
+    //Calcul de l'équation de la droite pour les points (100,100) et (50,75)
+    vpMatrix p1(3, 1);
+    p1[0][0] = 100;
+    p1[1][0] = 100;
+    p1[2][0] = 1;
+
+    vpMatrix Deg = gFd * p1;
+
+    double a = Deg[0][0]; 
+    double b = Deg[1][0];
+    double c = Deg[2][0];
+
+    std::cout << "Pour le point (100,100) on a a = " << a << ", b = " << b << ", c = " << c << std::endl; 
+
+    vpMatrix p2(3, 1);
+    p2[0][0] = 50;
+    p2[1][0] = 75;
+    p2[2][0] = 1;
+
+    Deg = gFd * p2;
+
+    a = Deg[0][0]; 
+    b = Deg[1][0];
+    c = Deg[2][0];
+
+    std::cout << "Pour le point (50,75) on a a = " << a << ", b = " << b << ", c = " << c << std::endl; 
+
   // exemple de code pour sauvegarder une image avec les plan overlay
   vpImage<vpRGBa> Icol ;
+  vpImage<vpRGBa> Icol2 ;
   vpDisplay::getImage(Id,Icol) ;
   vpImageIo::write(Icol,"resultat.jpg") ;
-  vpImageIo::write(Id,"I1g.jpg") ;
-
-  
+  vpDisplay::getImage(Ig,Icol2) ;
+  vpImageIo::write(Icol2,"I1g.jpg") ;
 
 
   vpDisplay::getClick(Id) ;
