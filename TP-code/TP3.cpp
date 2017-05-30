@@ -114,11 +114,8 @@ int main()
   vpImage<unsigned char> I2;
   vpImage<vpRGBa> Iimage(876,1200);
 
-
   vpImageIo::read(I1, "../data/I1.pgm") ;
   vpImageIo::read(I2, "../data/I2.pgm") ;
-
-
 
   vpCameraParameters cam(800.0, 800.0, 200, 150);
   cam.printParameters() ;
@@ -217,9 +214,6 @@ int main()
 
   vpDisplay::close(I2);
   vpDisplay::close(I1);
-
-
-
 
   return 0;
 }
