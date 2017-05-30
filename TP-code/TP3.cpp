@@ -75,6 +75,38 @@ std::cout << "min col index = " << minColIndex << std::endl;
   std::cout << "H12 calculee" << '\n';
 }
 
+void transfer(const vpImage<unsigned char>& I1, const vpImage<unsigned char>& I2, const vpMatrix H12, vpImage<unsigned char>& result)
+{
+	result.resize(I1.getRows(), I1.getCols(), 0);
+	for (int i = 0; i < I1.getRows(); i++)
+	{
+		for (int j = 0; j < I1.getCols(); j++)
+		{
+			result[i][j] = I1[i][j];
+		}
+	}
+
+	for (int i = 0; i < I1.getRows(); i++)
+	{
+		for (int j = 0; j < I1.getCols(); j++)
+		{
+			vpColVector P2(3);
+		    vpColVector P1(3);
+
+		    P2[0] = j;
+		    P2[1] = i;
+		    P2[2] = 1;
+
+			P1 = H12 * P2;
+
+			int k = P1[1] / P1[2];
+			int l = P1[0] / P1[2];
+
+			if( k >= 0 && k < I1.getRows() && l >= 0 && l < I1.getCols())
+				result[k][l] = (I2[i][j] + I1[k][l]) / 2;
+		}
+	}
+}
 
 int main()
 {
@@ -83,8 +115,8 @@ int main()
   vpImage<vpRGBa> Iimage(876,1200);
 
 
-  vpImageIo::read(I1,"../data/I1.pgm") ;
-  vpImageIo::read(I2,"../data/I2.pgm") ;
+  vpImageIo::read(I1, "../data/I1.pgm") ;
+  vpImageIo::read(I2, "../data/I2.pgm") ;
 
 
 
@@ -166,16 +198,25 @@ int main()
       vpDisplay::displayCircle(I1, p1_calcule, rayon, vpColor::green);
     }
 
+  vpDisplay::flush(I1);
+  vpImage<vpRGBa> Ic;
+  vpDisplay::getImage(I1,Ic);
+  vpImageIo::write(Ic, "resultat.jpg");
 
-  vpDisplay::flush(I1) ;
-  vpImage<vpRGBa> Ic ;
-  vpDisplay::getImage(I1,Ic) ;
-  vpImageIo::write(Ic,"resultat.jpg") ;
+  vpDisplay::getClick(I1);
 
-  vpDisplay::getClick(I1) ;
+  vpImage<unsigned char> Iresult;
+  transfer(I1, I2, H12, Iresult);
 
-  vpDisplay::close(I2) ;
-  vpDisplay::close(I1) ;
+  vpDisplayX dresult(Iresult, 450, 450, "Resultat fusion");
+  vpDisplay::display(Iresult);
+  vpDisplay::flush(Iresult);
+  vpImageIo::write(Iresult, "resultat_fusion.jpg");
+
+  vpDisplay::getClick(Iresult);
+
+  vpDisplay::close(I2);
+  vpDisplay::close(I1);
 
 
 
