@@ -205,10 +205,10 @@ int main()
   vpImage<unsigned char> Iresult;
   transfer(I1, I2, H12, Iresult);
 
-  vpDisplayX dresult(Iresult, 450, 450, "Resultat fusion");
+  vpDisplayX dresult(Iresult, 450, 450, "Transfer result");
   vpDisplay::display(Iresult);
   vpDisplay::flush(Iresult);
-  vpImageIo::write(Iresult, "resultat_fusion.jpg");
+  vpImageIo::write(Iresult, "transfer_result.jpg");
 
   vpDisplay::getClick(Iresult);
 

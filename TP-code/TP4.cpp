@@ -62,19 +62,38 @@ void afficheAppariement(vpImage<unsigned char> &I1,
   vpDisplay::flush(I) ;
 }
 
-std::vector<int> generateRandomSubset(int subsetSize, int fullSetSize)
+void transfer(const vpImage<unsigned char>& I1, const vpImage<unsigned char>& I2, const vpMatrix H12, vpImage<unsigned char>& result)
 {
-	std::vector<int> res;
-	for (int i = 0; i < subsetSize; i++) {
-		int r = rand() % fullSetSize;
-    	if(std::find(res.begin(), res.end(), r) == res.end()){
-			res.push_back(r);
-		}
-		else {
-			i--;
+	result.resize(I1.getRows(), I1.getCols(), 0);
+
+	for (int i = 0; i < I1.getRows(); i++)
+	{
+		for (int j = 0; j < I1.getCols(); j++)
+		{
+			result[i][j] = I1[i][j];
 		}
 	}
-	return res;
+
+	for (int i = 0; i < I1.getRows(); i++)
+	{
+		for (int j = 0; j < I1.getCols(); j++)
+		{
+			vpColVector P2(3);
+		    vpColVector P1(3);
+
+		    P2[0] = j;
+		    P2[1] = i;
+		    P2[2] = 1;
+
+			P1 = H12 * P2;
+
+			int k = P1[1] / P1[2];
+			int l = P1[0] / P1[2];
+
+			if(k >= 0 && k < I1.getRows() && l >= 0 && l < I1.getCols())
+				result[k][l] = (I2[i][j] + I1[k][l]) / 2;
+		}
+	}
 }
 
 void DLT(unsigned int n, vpImagePoint *p1, vpImagePoint *p2, vpMatrix &H12)
@@ -115,7 +134,6 @@ void DLT(unsigned int n, vpImagePoint *p1, vpImagePoint *p2, vpMatrix &H12)
   vpMatrix V(9, 1);
   vpColVector D;
   A.svd(D, V);
-  std::cout << "taille D : " << D.getRows() << "x" << D.getCols() << std::endl;
 
   int minColIndex = 0;
   for(int i = 1; i < D.getRows(); i++) {
@@ -124,10 +142,9 @@ void DLT(unsigned int n, vpImagePoint *p1, vpImagePoint *p2, vpMatrix &H12)
    }
   }
 
-std::cout << "min col index = " << minColIndex << std::endl;
-
   H12.resize(3, 3);
   int k = 0;
+
   for(int i = 0; i < 3; i++) {
   	for(int j = 0; j < 3; j++) {
   		H12[i][j] = V[k][minColIndex];
@@ -135,76 +152,170 @@ std::cout << "min col index = " << minColIndex << std::endl;
   	}
 }
 
-  std::cout << "H12 calculee" << '\n';
+}
+
+
+std::vector<int> generateRandomSubset(int subsetSize, int fullSetSize)
+{
+	std::vector<int> res;
+	for (int i = 0; i < subsetSize; i++) {
+		int r = rand() % fullSetSize;
+    	if(std::find(res.begin(), res.end(), r) == res.end()){
+			res.push_back(r);
+		}
+		else {
+			i--;
+		}
+	}
+	return res;
 }
 
 double computeSubsetError(std::vector<int> subset, vpImagePoint* p1, vpImagePoint* p2, vpMatrix& H12)
 {
 	double error = 0;
-
 	for(int i = 0; i < subset.size(); i++) {
-		vpMatrix p1_mat(3, 1);
-		vpMatrix p2_mat(3, 1);
-		p2_mat[0][0] = p2[subset[i]].get_u();
-		p2_mat[1][0] = p2[subset[i]].get_v();
-		p2_mat[2][0] = 1;
-		p1_mat = H12 * p2_mat;
+        vpColVector P1(3);
+        vpColVector P2(3);
+
+		P2[0] = p2[i].get_u();
+		P2[1] = p2[i].get_v();
+		P2[2] = 1;
+
+		P1 = H12 * P2;
 
 		vpImagePoint p1_calcule;
-		p1_calcule.set_u(p1_mat[0][0] / p1_mat[2][0]);
-		p1_calcule.set_v(p1_mat[1][0] / p1_mat[2][0]);
-		error += vpImagePoint::distance(p1_calcule, p1[subset[i]]);
+
+		p1_calcule.set_u(P1[0] / P1[2]);
+		p1_calcule.set_v(P1[1] / P1[2]);
+
+		error += sqrt(vpImagePoint::distance(p1[subset[i]], p1_calcule));
 
 	}
 
 	return error / subset.size();
 }
 
-int checkFullSetError(vpImagePoint* p1, vpImagePoint* p2, int fullSetSize, vpMatrix& H12, double threshold, bool* goodPoints)
+int checkFullSetError(vpImagePoint* p1, vpImagePoint* p2, int fullSetSize, vpMatrix& H12, double threshold, std::vector<bool>& goodPoints)
 {
+    std::cout << "----------" << std::endl;
+    std::cout << "Full set error" << std::endl;
+    std::cout << "----------" << std::endl;
+
 	int count = 0;
+
 	for(int i = 0; i < fullSetSize; i++) {
-		vpMatrix p1_mat(3, 1);
-		vpMatrix p2_mat(3, 1);
-		p2_mat[0][0] = p2[i].get_u();
-		p2_mat[1][0] = p2[i].get_v();
-		p2_mat[2][0] = 1;
-		p1_mat = H12 * p2_mat;
+        vpColVector P1(3);
+        vpColVector P2(3);
+
+		P2[0] = p2[i].get_u();
+		P2[1] = p2[i].get_v();
+		P2[2] = 1;
+
+		P1 = H12 * P2;
 
 		vpImagePoint p1_calcule;
-		p1_calcule.set_u(p1_mat[0][0] / p1_mat[2][0]);
-		p1_calcule.set_v(p1_mat[1][0] / p1_mat[2][0]);
-		double error = vpImagePoint::distance(p1_calcule, p1[i]);
 
-		if(error < threshold)
-			goodPoints[i] = true;
+		p1_calcule.set_u(P1[0] / P1[2]);
+		p1_calcule.set_v(P1[1] / P1[2]);
+
+		double error = sqrt(vpImagePoint::distance(p1[i], p1_calcule));
+
+        std::cout << "Point " << i << " error : " << error << std::endl;
+
+		if(error < threshold) {
+            std::cout << "Passes threshold of " << threshold << std::endl;
+            goodPoints[i] = true;
 			count++;
+        }
 	}
 
 	return count;
 }
 
-void ransac(vpImagePoint* p1, vpImagePoint* p2, int subsetSize, int fullSetSize, int iterations, double subsetErrorThreshold, double individualErrorThreshold)
+std::vector<bool> ransac(vpImagePoint* p1, vpImagePoint* p2, vpMatrix& H12, int subsetSize, int fullSetSize, int iterations, double subsetErrorThreshold, double individualErrorThreshold)
 {
-	bool goodPoints[fullSetSize];
+    std::cout << "====================" << std::endl;
+    std::cout << "Ransac" << std::endl;
+    std::cout << "====================" << std::endl;
+
+	std::vector<bool> goodPoints(fullSetSize, false);
 	std::vector<int> previousSubset;
-	int previousGoodPointsNumber = 0;
+
+    int goodPointsNumber = 0;
+	int maxGoodPointsNumber = 0;
+
+    H12.resize(3, 3, 0);
 
 	for(int i = 0; i < iterations; i++) {
+        std::cout << "--------------------" << std::endl;
+        std::cout << "Ransac iteration number " << i << std::endl;
+        std::cout << "--------------------" << std::endl;
+
 		std::vector<int> subset = generateRandomSubset(subsetSize, fullSetSize);
-		vpMatrix H12;
-		DLT(subsetSize, p1, p2, H12);
+        std::cout << "Subset generated " << std::endl;
+
+        vpImagePoint temp_p1[subsetSize];
+        vpImagePoint temp_p2[subsetSize];
+
+        for (int i = 0; i < subsetSize; i++) {
+            temp_p1[i] = p1[subset[i]];
+            temp_p2[i] = p2[subset[i]];
+        }
+
+        std::cout << "DLT on subset " << std::endl;
+		DLT(subsetSize, temp_p1, temp_p2, H12);
+
 		double subsetError = computeSubsetError(subset, p1, p2, H12);
 
-		if(subsetError > subsetErrorThreshold)
-			continue;
+		if(subsetError < subsetErrorThreshold) {
+            std::cout << "Subset error inferior to threshold of " << subsetErrorThreshold << std::endl;
 
-		int goodPointsNumber = checkFullSetError(p1, p2, fullSetSize, H12, individualErrorThreshold, goodPoints);
-		if(goodPointsNumber > previousGoodPointsNumber) {
-			previousSubset = subset;
-			previousGoodPointsNumber = goodPointsNumber;
-		}
+            std::vector<bool> tempGoodPoints(fullSetSize, false);
+        	goodPointsNumber = checkFullSetError(p1, p2, fullSetSize, H12, individualErrorThreshold, tempGoodPoints);
+
+            std::cout << "New good points : " << goodPointsNumber << std::endl;
+            std::cout << "Previous good points : " << maxGoodPointsNumber << std::endl;
+        	if(goodPointsNumber > maxGoodPointsNumber) {
+                std::cout << "Better" << std::endl;
+
+        		maxGoodPointsNumber = goodPointsNumber;
+                goodPoints = tempGoodPoints;
+        	}
+            else {
+                std::cout << "Worse" << std::endl;
+            }
+        }
+        else {
+            std::cout << "Subset error superior to threshold of " << subsetErrorThreshold << std::endl;
+        }
+
 	}
+
+    std::cout << "Final points selected : ";
+    for(int i = 0; i < goodPoints.size(); i++) {
+        if(goodPoints[i]) {
+            std::cout << i << " ";
+        }
+    }
+    std::cout << std::endl;
+
+    std::cout << "DLT on selected points" << std::endl;
+
+    vpImagePoint selectedP1[maxGoodPointsNumber];
+    vpImagePoint selectedP2[maxGoodPointsNumber];
+    int count = 0;
+
+    for(int i = 0; i < goodPoints.size(); i++) {
+        if(goodPoints[i]) {
+            selectedP1[count] = p1[i];
+            selectedP2[count] = p2[i];
+            count++;
+        }
+    }
+
+    DLT(goodPointsNumber, selectedP1, selectedP2, H12);
+
+    return goodPoints;
 }
 
 int main()
@@ -295,7 +406,62 @@ int main()
 
     }
 
-	vpDisplay::getClick(I);
+
+
+    // Ransac
+    vpMatrix H12;
+    std::vector<bool> goodPoints = ransac(p1, p2, H12, 5, 17, 20, 50, 10);
+
+    // Affichage resultat
+    for (int i=0 ; i < nb ; i++) {
+        if(goodPoints[i]) {
+            vpImagePoint p1_calcule  ;
+
+            vpColVector P2(3);
+            vpColVector P1(3);
+
+            P2[0] = p2[i].get_u();
+            P2[1] = p2[i].get_v();
+            P2[2] = 1;
+
+            P1 = H12*P2;
+
+            P1[0]/=P1[2];
+            P1[1]/=P1[2];
+            P1[2]/=P1[2];
+
+            p1_calcule.set_u(P1[0]);
+            p1_calcule.set_v(P1[1]);
+
+            double r ;
+            r = vpImagePoint::distance(p1[i],p1_calcule) ;
+
+            cout << "point " << i << "  " << sqrt(r) <<endl;
+            double rayon ;
+            rayon = sqrt(r)*10 ; if (rayon < 10) rayon =10 ;
+            vpDisplay::displayCircle(I1,p1_calcule,rayon,vpColor::green);
+        }
+    }
+
+    vpDisplay::flush(I1);
+    vpImage<vpRGBa> Ic;
+    vpDisplay::getImage(I1,Ic);
+    vpImageIo::write(Ic, "resultat.jpg");
+
+    vpImage<unsigned char> Iresult;
+    transfer(I1, I2, H12, Iresult);
+
+    vpDisplayX dresult(Iresult, 450, 450, "Transfer result");
+    vpDisplay::display(Iresult);
+    vpDisplay::flush(Iresult);
+    vpImageIo::write(Iresult, "transfer_result.jpg");
+
+    vpDisplay::getClick(I);
+
+    vpDisplay::close(I) ;
+    vpDisplay::close(I2) ;
+    vpDisplay::close(I1) ;
+    vpDisplay::close(Iresult) ;
 
     return 0;
 }
