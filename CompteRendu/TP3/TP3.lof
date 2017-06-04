@@ -1,0 +1,8 @@
+\select@language {french}
+\contentsline {figure}{\numberline {1}{\ignorespaces Erreur distance entre l'estimation et la r\IeC {\'e}alit\IeC {\'e}}}{2}
+\contentsline {figure}{\numberline {2}{\ignorespaces Transfert des points de l'image de droite vers celle de gauche}}{3}
+\contentsline {figure}{\numberline {3}{\ignorespaces Correspondance entre les points d\IeC {\'e}t\IeC {\'e}ct\IeC {\'e}s}}{4}
+\contentsline {figure}{\numberline {4}{\ignorespaces Erreur distance entre l'estimation et la r\IeC {\'e}alit\IeC {\'e} pour tous les points d\IeC {\'e}t\IeC {\'e}ct\IeC {\'e}s}}{4}
+\contentsline {figure}{\numberline {5}{\ignorespaces Transfert avec l'estimation pour tous les points d\IeC {\'e}t\IeC {\'e}ct\IeC {\'e}s}}{5}
+\contentsline {figure}{\numberline {6}{\ignorespaces Erreur distance entre l'estimation et la r\IeC {\'e}alit\IeC {\'e} pour tous les points donn\IeC {\'e}s par RANSAC}}{6}
+\contentsline {figure}{\numberline {7}{\ignorespaces Transfert avec l'estimation pour tous les points d\IeC {\'e}t\IeC {\'e}ct\IeC {\'e}s}}{6}

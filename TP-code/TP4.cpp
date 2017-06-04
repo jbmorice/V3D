@@ -405,10 +405,66 @@ int main()
         }
 
     }
+/*
+    // DLT classique
+    // ============
+    vpMatrix H12 ;
+    DLT(17, p1, p2, H12) ;
 
+    cout << "Homographie H12 : " << endl ;
+    cout << H12 << endl ;
 
+    //Verification
+    double residue = 0 ;
+    for (int i = 0 ; i < nb ; i++)
+      {
+        // Connaissant le formule permettant le transfert des points p2 dans p1
+        // Calculer les coordonn�es des point p1 connaissant p2 et dHg
+  	  vpMatrix p1_mat(3, 1);
+  	  vpMatrix p2_mat(3, 1);
+  	  p2_mat[0][0] = p2[i].get_u();
+    	  p2_mat[1][0] = p2[i].get_v();
+  	  p2_mat[2][0] = 1;
+  	  p1_mat = H12 * p2_mat;
 
+  	  vpImagePoint p1_calcule;
+  	  p1_calcule.set_u(p1_mat[0][0] / p1_mat[2][0]);
+    	  p1_calcule.set_v(p1_mat[1][0] / p1_mat[2][0]);
+
+        // en deduire l'erreur sur commise sur chaque point et
+        // afficher un cercle de rayon 10 fois cette erreur
+        double r = vpImagePoint::distance(p1_calcule, p1[i]);
+
+        std::cout << "point " << i << "  " << r << std::endl;
+        double rayon ;
+        rayon = sqrt(r)*10 ; if (rayon < 10) rayon = 10;
+        vpDisplay::displayCircle(I1, p1_calcule, rayon, vpColor::green);
+      }
+
+        vpDisplay::flush(I1);
+        vpImage<vpRGBa> Ic;
+        vpDisplay::getImage(I1,Ic);
+        vpImageIo::write(Ic, "resultat.jpg");
+
+        vpDisplay::getClick(I1);
+
+        vpImage<unsigned char> Iresult;
+        transfer(I1, I2, H12, Iresult);
+
+        vpDisplayX dresult(Iresult, 450, 450, "Transfer result");
+        vpDisplay::display(Iresult);
+        vpDisplay::flush(Iresult);
+        vpImageIo::write(Iresult, "transfer_result.jpg");
+
+        vpDisplay::getClick(Iresult);
+
+        vpDisplay::close(I2);
+        vpDisplay::close(I1);
+
+        //==========
+*/
     // Ransac
+    //===========
     vpMatrix H12;
     std::vector<bool> goodPoints = ransac(p1, p2, H12, 5, 17, 20, 50, 10);
 
@@ -442,7 +498,6 @@ int main()
             vpDisplay::displayCircle(I1,p1_calcule,rayon,vpColor::green);
         }
     }
-
     vpDisplay::flush(I1);
     vpImage<vpRGBa> Ic;
     vpDisplay::getImage(I1,Ic);
